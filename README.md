@@ -1,5 +1,10 @@
 # prop.house discord bot
 
+## Examples:
+![Example update messages](docs/img/update-thread.png)
+
+![Example DM Thread](docs/img/dm-thread.png)
+
 ### Code standards:
 1. Written in typescript
 2. Uses latest discord-interactions api standards
