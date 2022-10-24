@@ -10,13 +10,11 @@ export async function sendMessage(content: any, channel?: string) {
   if (!channel) {
     channel = process.env.CHANNEL_ID;
   }
-  console.log("sending message", JSON.stringify({ content, channel }));
   try {
     const request = await DiscordRequest(`channels/${channel}/messages`, {
       method: "POST",
       body: content,
     });
-    console.log(request);
   } catch (e: any) {
     console.error(e);
   }
@@ -97,29 +95,27 @@ export function makeActions(
         type: MessageComponentTypes.ACTION_ROW,
         content: "options",
         components: [
-          ...[
-            !follower
-              ? [
-                  {
-                    type: MessageComponentTypes.BUTTON,
-                    style: ButtonStyleTypes.PRIMARY,
-                    custom_id: subscriber
-                      ? `unsubscribe_${auction.id}`
-                      : `subscribe_${auction.id}`,
-                    label: `${
-                      subscriber ? "Unsubscribe from " : "Subscribe to "
-                    } ${auction.title}`,
-                  },
-                ]
-              : [],
-          ],
+          ...(!follower
+            ? [
+                {
+                  type: MessageComponentTypes.BUTTON,
+                  style: ButtonStyleTypes.PRIMARY,
+                  custom_id: subscriber
+                    ? `unsubscribe_${auction.id}`
+                    : `subscribe_${auction.id}`,
+                  label: `${
+                    subscriber ? "Unsubscribe from " : "Subscribe to "
+                  } ${auction.title}`,
+                },
+              ]
+            : []),
           {
             type: MessageComponentTypes.BUTTON,
             style: ButtonStyleTypes.SECONDARY,
-            custom_id: follower
+            custom_id: !follower
               ? `unfollow_${auction.community.id}`
               : `follow_${auction.community.id}`,
-            label: `${follower ? "Follow " : "Unfollow "} ${
+            label: `${!follower ? "Follow " : "Unfollow "} ${
               auction.community.name
             }`,
           },

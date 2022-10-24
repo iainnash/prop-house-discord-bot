@@ -8,7 +8,7 @@ import {
   InteractionResponseType,
   MessageComponentTypes,
 } from "discord-interactions";
-import { VerifyDiscordRequest, getRandomEmoji, getRedisClient } from "./utils";
+import { VerifyDiscordRequest, getRedisClient } from "./utils";
 import { HasGuildCommands, SUBSCRIPTIONS_COMMAND } from "./commands";
 import { getSDK } from "./graph/queries/sdk";
 
@@ -18,8 +18,8 @@ import {
   makeButton,
   makeURLFromAuction,
   makeURLFromCommunity,
+  sendDM,
 } from "./messages";
-
 
 // Create an express app
 const app = express();
@@ -49,18 +49,6 @@ app.post("/interactions", async function (req, res) {
    */
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data;
-
-    // "test" guild command
-    if (name === "test") {
-      // Send a message into the channel where command was triggered from
-      return res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          // Fetches a random emoji to send from a helper function
-          content: "hello world " + getRandomEmoji(),
-        },
-      });
-    }
 
     if (name === "subscribe" && id) {
       const userId = req.body.member.user.id;
@@ -103,76 +91,80 @@ app.post("/interactions", async function (req, res) {
     // custom_id set in payload when sending message component
     const componentId = data.custom_id as string;
     const userId = req.body.member ? req.body.member.user.id : req.body.user.id;
+    let messageData;
+    const client = await getRedisClient();
 
     if (componentId.startsWith("subscribe_")) {
       const subscribeId = parseInt(componentId.substring("subscribe_".length));
       const client = await getRedisClient();
       await client.sAdd(`subscribe_${subscribeId}`, userId);
       const { auction } = await getSDK().auction({ id: subscribeId });
-      return res.send({
-        type: InteractionResponseType.UPDATE_MESSAGE,
-        data: {
-          content: `You are now subscribed to ${auction.title} (${auction.community.name})`,
-          ...makeButton(
-            `unsubscribe_${subscribeId}`,
-            "Unsubscribe",
-            makeURLFromAuction(auction)
-          ),
-        },
-      });
+      messageData = {
+        content: `You are now subscribed to ${auction.title} (${auction.community.name})`,
+        ...makeButton(
+          `unsubscribe_${subscribeId}`,
+          "Unsubscribe",
+          makeURLFromAuction(auction)
+        ),
+      };
     }
+
     if (componentId.startsWith("unsubscribe_")) {
       const subscribeId = parseInt(
         componentId.substring("unsubscribe_".length)
       );
-      const client = await getRedisClient();
       await client.sRem(`subscribe_${subscribeId}`, userId);
       const { auction } = await getSDK().auction({ id: subscribeId });
-      return res.send({
-        type: InteractionResponseType.UPDATE_MESSAGE,
-        data: {
-          content: `You are now unsubscribed from ${auction.title} (${auction.community.name})`,
-          ...makeButton(
-            `subscribe_${subscribeId}`,
-            "Subscribe",
-            makeURLFromAuction(auction)
-          ),
-        },
-      });
+      messageData = {
+        content: `You are now unsubscribed from ${auction.title} (${auction.community.name})`,
+        ...makeButton(
+          `subscribe_${subscribeId}`,
+          "Subscribe",
+          makeURLFromAuction(auction)
+        ),
+      };
     }
     if (componentId.startsWith("follow_")) {
       const followId = parseInt(componentId.substring("follow_".length));
       const client = await getRedisClient();
       const { community } = await getSDK().community({ id: followId });
       await client.sAdd(`follow_${followId}`, userId);
-      return res.send({
-        type: InteractionResponseType.UPDATE_MESSAGE,
-        data: {
-          content: `You are now following ${community.name}`,
-          ...makeButton(
-            `unfollow_${followId}`,
-            "Unfollow",
-            makeURLFromCommunity(community)
-          ),
-        },
-      });
+      messageData = {
+        content: `You are now following ${community.name}`,
+        ...makeButton(
+          `unfollow_${followId}`,
+          "Unfollow",
+          makeURLFromCommunity(community)
+        ),
+      };
     }
     if (componentId.startsWith("unfollow_")) {
       const followId = parseInt(componentId.substring("unfollow_".length));
       const client = await getRedisClient();
       await client.sRem(`follow_${followId}`, userId);
       const { community } = await getSDK().community({ id: followId });
-      return res.send({
-        type: InteractionResponseType.UPDATE_MESSAGE,
-        data: {
-          content: `You have unfollowed ${community.name}`,
-          ...makeButton(
-            `follow_${followId}`,
-            "Follow",
-            makeURLFromCommunity(community)
-          ),
-        },
-      });
+      messageData = {
+        content: `You have unfollowed ${community.name}`,
+        ...makeButton(
+          `follow_${followId}`,
+          "Follow",
+          makeURLFromCommunity(community)
+        ),
+      };
+    }
+
+    if (messageData) {
+      if (req.body.member) {
+        await sendDM(client, userId, messageData);
+        return res.send({
+          type: InteractionResponseType.DEFERRED_UPDATE_MESSAGE,
+        });
+      } else {
+        return res.send({
+          type: InteractionResponseType.UPDATE_MESSAGE,
+          data: messageData,
+        });
+      }
     }
   }
 });

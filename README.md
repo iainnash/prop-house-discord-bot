@@ -1,5 +1,11 @@
 # prop.house discord bot
 
+Code standards:
+1. Written in typescript
+2. Uses latest discord-interactions api standards
+3. Uses dynamic button / message update UX
+4. Uses generated typescript graphql SDK
+
 Features:
 1. Auto-notifies on any status change within a global (configurable) update channel
 2. Allows any user to follow a community or to subscribe to a specific prop via DMs

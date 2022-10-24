@@ -1,4 +1,4 @@
-import { capitalize, DiscordRequest } from './utils';
+import { DiscordRequest } from './utils';
 
 export async function HasGuildCommands(appId, guildId, commands) {
   if (guildId === '' || appId === '') return;
