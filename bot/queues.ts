@@ -1,6 +1,6 @@
 import Bull from "bull";
-import { AuctionStatus } from "./graph/queries/prop-house-sdk";
-import { getSDK } from "./graph/queries/sdk";
+import { AuctionStatus } from "../sdk/src/queries/prop-house-sdk";
+import { getPropHouseSDK } from "prop-house-sdk";
 import { makeActions, makeEmbed, sendMessage } from "./messages";
 import { getRedisClient } from "./utils";
 import { setupDMThread } from "./messages";
@@ -10,7 +10,7 @@ const notifications = new Bull("notifications");
 
 updates.process(async () => {
   console.log("has updates");
-  const sdk = getSDK();
+  const sdk = getPropHouseSDK();
   const open = await sdk.auctionsByStatus({ status: AuctionStatus.Open });
   const upcoming = await sdk.auctionsByStatus({
     status: AuctionStatus.Upcoming,
@@ -47,7 +47,13 @@ updates.process(async () => {
       }, {});
       await notifications.addBulk(
         Object.keys(users).map((user) => ({
-          data: { id: item.data.id, status: item.type, user_id: user, follower: user in followers, subscriber: user in subscribers },
+          data: {
+            id: item.data.id,
+            status: item.type,
+            user_id: user,
+            follower: user in followers,
+            subscriber: user in subscribers,
+          },
         }))
       );
       console.log("insert update");
@@ -58,7 +64,7 @@ updates.process(async () => {
 notifications.process(async (notification) => {
   const item: any = notification.data;
   console.log("has notification!", item);
-  const { auction } = await getSDK().auction({
+  const { auction } = await getPropHouseSDK().auction({
     id: item.id,
   });
 
@@ -110,6 +116,7 @@ async function setupBull() {
     {
       run: "update",
     },
+    // runs every hour – can run every 30 mins if needed
     { repeat: { cron: "0 * * * *" } }
   );
   updates.add({ run: "now" });

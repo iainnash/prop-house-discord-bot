@@ -30,3 +30,11 @@
 2. Setup redis URL env variables and system
 3. Start app with favorite job runner using `yarn run start`
 4. Stay updated :)
+
+# prop.house typescript SDK
+
+### Features:
+1. Common queries and typing already exported in ts
+2. Used in the the prop.house bot
+3. Can be used by any other project
+4. Pull requests welcome

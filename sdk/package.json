@@ -1,0 +1,24 @@
+{
+  "name": "prop-house-sdk",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
+  "typings": "./dist/index.d.ts",
+  "main": "./dist/index.js",
+  "source": "./src/index.ts",
+  "devDependencies": {
+    "@graphql-codegen/cli": "^2.13.7",
+    "@graphql-codegen/typescript": "^2.7.5",
+    "@graphql-codegen/typescript-graphql-request": "^4.5.7",
+    "@graphql-codegen/typescript-operations": "^2.5.5",
+    "@graphql-tools/schema": "^9.0.4"
+  },
+  "dependencies": {
+    "graphql": "^16.6.0",
+    "graphql-request": "^5.0.0",
+    "graphql-tag": "^2.12.6",
+    "typescript": "^4.8.4"
+  }
+}

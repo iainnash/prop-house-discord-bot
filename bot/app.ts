@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { GraphQLClient } from "graphql-request";
 import "isomorphic-fetch";
-import { getSdk } from "./graph/queries/prop-house-sdk";
+import {getPropHouseSDK} from 'prop-house-sdk';
 import express from "express";
 import {
   InteractionType,
@@ -10,7 +10,6 @@ import {
 } from "discord-interactions";
 import { VerifyDiscordRequest, getRedisClient } from "./utils";
 import { HasGuildCommands, SUBSCRIPTIONS_COMMAND } from "./commands";
-import { getSDK } from "./graph/queries/sdk";
 
 import "./queues";
 import { createClient } from "redis";
@@ -53,7 +52,7 @@ app.post("/interactions", async function (req, res) {
     if (name === "subscribe" && id) {
       const userId = req.body.member.user.id;
 
-      const houses = await await getSDK().communities();
+      const houses = await await getPropHouseSDK().communities();
 
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -98,7 +97,7 @@ app.post("/interactions", async function (req, res) {
       const subscribeId = parseInt(componentId.substring("subscribe_".length));
       const client = await getRedisClient();
       await client.sAdd(`subscribe_${subscribeId}`, userId);
-      const { auction } = await getSDK().auction({ id: subscribeId });
+      const { auction } = await getPropHouseSDK().auction({ id: subscribeId });
       messageData = {
         content: `You are now subscribed to ${auction.title} (${auction.community.name})`,
         ...makeButton(
@@ -114,7 +113,7 @@ app.post("/interactions", async function (req, res) {
         componentId.substring("unsubscribe_".length)
       );
       await client.sRem(`subscribe_${subscribeId}`, userId);
-      const { auction } = await getSDK().auction({ id: subscribeId });
+      const { auction } = await getPropHouseSDK().auction({ id: subscribeId });
       messageData = {
         content: `You are now unsubscribed from ${auction.title} (${auction.community.name})`,
         ...makeButton(
@@ -127,7 +126,7 @@ app.post("/interactions", async function (req, res) {
     if (componentId.startsWith("follow_")) {
       const followId = parseInt(componentId.substring("follow_".length));
       const client = await getRedisClient();
-      const { community } = await getSDK().community({ id: followId });
+      const { community } = await getPropHouseSDK().community({ id: followId });
       await client.sAdd(`follow_${followId}`, userId);
       messageData = {
         content: `You are now following ${community.name}`,
@@ -142,7 +141,7 @@ app.post("/interactions", async function (req, res) {
       const followId = parseInt(componentId.substring("unfollow_".length));
       const client = await getRedisClient();
       await client.sRem(`follow_${followId}`, userId);
-      const { community } = await getSDK().community({ id: followId });
+      const { community } = await getPropHouseSDK().community({ id: followId });
       messageData = {
         content: `You have unfollowed ${community.name}`,
         ...makeButton(

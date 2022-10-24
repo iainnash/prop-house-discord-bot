@@ -2,7 +2,7 @@ import { ButtonStyleTypes, MessageComponentTypes } from "discord-interactions";
 import {
   AuctionWithCommunityPartFragment,
   CommunityPartFragment,
-} from "./graph/queries/prop-house-sdk";
+} from "../sdk/src/queries/prop-house-sdk";
 import { DiscordRequest } from "./utils";
 import sanitizeHtml from "sanitize-html";
 
