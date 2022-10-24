@@ -19,6 +19,7 @@
 5. Good error handling / job queing for maintainance (uses redis)
 6. Uses new js SDK for prop.house
 7. Uses Bull to manage jobs and prevent rate-limiting from discord.
+8. Supports cross-posting to twitter with correct API keys
 
 ### Todo:
 1. Notify on any updates to the database (time changed etc)

@@ -1,8 +1,8 @@
 import Bull from "bull";
 import { AuctionStatus } from "../sdk/src/queries/prop-house-sdk";
 import { getPropHouseSDK } from "prop-house-sdk";
-import { makeActions, makeEmbed, sendMessage } from "./messages";
-import { getRedisClient } from "./utils";
+import { makeActions, makeEmbed, makeURLFromAuction, sendMessage } from "./messages";
+import { getRedisClient, sendTweet } from "./utils";
 import { setupDMThread } from "./messages";
 
 const updates = new Bull("updates");
@@ -39,7 +39,13 @@ updates.process(async () => {
       );
       await notifications.add({
         id: item.data.id,
+        type: item.type,
+        channel: 'twitter',
+      });
+      await notifications.add({
+        id: item.data.id,
         status: item.type,
+        channel: 'discord',
       });
       const users = [...followers, ...subscribers].reduce((last, now) => {
         last[now] = true;
@@ -50,6 +56,7 @@ updates.process(async () => {
           data: {
             id: item.data.id,
             status: item.type,
+            channel: 'discord',
             user_id: user,
             follower: user in followers,
             subscriber: user in subscribers,
@@ -67,6 +74,25 @@ notifications.process(async (notification) => {
   const { auction } = await getPropHouseSDK().auction({
     id: item.id,
   });
+
+  if (item.channel === 'twitter') {
+    let output;
+    const uri = makeURLFromAuction(auction);
+    if (auction.status === AuctionStatus.Voting) {
+      output = `${auction.community.name}: ${auction.title.substring(0, 10)} up for voting (${uri})`;
+    }
+    if (auction.status === AuctionStatus.Open) {
+      output = `${auction.community.name}: ${auction.title.substring(0, 10)} open for submissions (${uri})`;
+    }
+    if (auction.status === AuctionStatus.Upcoming) {
+      output = `${auction.community.name}: ${auction.title.substring(0, 10)} coming soon (${uri})`;
+    }
+    if (output) {
+      await sendTweet(output);
+    }
+
+    return;
+  }
 
   let recipient = null;
   let follower = false;
