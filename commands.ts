@@ -1,5 +1,4 @@
-import { getRPSChoices } from './game.js';
-import { capitalize, DiscordRequest } from './utils.js';
+import { capitalize, DiscordRequest } from './utils';
 
 export async function HasGuildCommands(appId, guildId, commands) {
   if (guildId === '' || appId === '') return;
@@ -14,7 +13,7 @@ async function HasGuildCommand(appId, guildId, command) {
 
   try {
     const res = await DiscordRequest(endpoint, { method: 'GET' });
-    const data = await res.json();
+    const data: any = await res.json();
 
     if (data) {
       const installedNames = data.map((c) => c['name']);
@@ -43,40 +42,8 @@ export async function InstallGuildCommand(appId, guildId, command) {
   }
 }
 
-// Get the game choices from game.js
-function createCommandChoices() {
-  const choices = getRPSChoices();
-  const commandChoices = [];
-
-  for (let choice of choices) {
-    commandChoices.push({
-      name: capitalize(choice),
-      value: choice.toLowerCase(),
-    });
-  }
-
-  return commandChoices;
-}
-
-// Simple test command
-export const TEST_COMMAND = {
-  name: 'test',
-  description: 'Basic guild command',
-  type: 1,
-};
-
-// Command containing options
-export const CHALLENGE_COMMAND = {
-  name: 'challenge',
-  description: 'Challenge to a match of rock paper scissors',
-  options: [
-    {
-      type: 3,
-      name: 'object',
-      description: 'Pick your object',
-      required: true,
-      choices: createCommandChoices(),
-    },
-  ],
+export const SUBSCRIPTIONS_COMMAND = {
+  name: 'subscriptions',
+  description: "List current subscriptions",
   type: 1,
 };

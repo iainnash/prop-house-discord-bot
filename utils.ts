@@ -1,9 +1,16 @@
 import 'dotenv/config';
-import fetch from 'node-fetch';
+import 'isomorphic-fetch';
 import { verifyKey } from 'discord-interactions';
+import { createClient } from 'redis';
 
-export function VerifyDiscordRequest(clientKey) {
-  return function (req, res, buf, encoding) {
+export async function getRedisClient() {
+  const client = createClient();
+  await client.connect();
+  return client;
+}
+
+export function VerifyDiscordRequest(clientKey: any) {
+  return function (req: any, res: any, buf: any, encoding: any) {
     const signature = req.get('X-Signature-Ed25519');
     const timestamp = req.get('X-Signature-Timestamp');
 
@@ -15,7 +22,7 @@ export function VerifyDiscordRequest(clientKey) {
   };
 }
 
-export async function DiscordRequest(endpoint, options) {
+export async function DiscordRequest(endpoint: string, options: any) {
   // append endpoint to root API URL
   const url = 'https://discord.com/api/v10/' + endpoint;
   // Stringify payloads
@@ -45,6 +52,6 @@ export function getRandomEmoji() {
   return emojiList[Math.floor(Math.random() * emojiList.length)];
 }
 
-export function capitalize(str) {
+export function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

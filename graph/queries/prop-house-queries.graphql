@@ -1,0 +1,70 @@
+fragment CommunityPart on Community {
+	profileImageUrl
+	name
+  description
+	id
+}
+
+fragment AuctionPart on Auction {
+  status
+  description
+  title
+	id
+}
+
+fragment AuctionWithCommunityPart on Auction {
+	...AuctionPart
+	community {
+		...CommunityPart
+	}
+}
+
+query communities {
+	communities {
+		...CommunityPart
+	}
+}
+
+query auction($id: Int!) {
+	auction(id: $id) {
+		...AuctionWithCommunityPart
+	}
+}
+
+query community($id: Int!) {
+	community(id: $id) {
+		...CommunityPart
+	}
+}
+
+query auctionsByStatus($status: AuctionStatus!) {
+	auctionsByStatus(status: $status, limit: 100) {
+		...AuctionWithCommunityPart
+	}
+}
+
+query proposalsById($id: Int!) {
+	community(id: $id) {
+		...CommunityPart
+		auctions {
+      ...AuctionPart
+		}
+	}
+}
+
+query proposalsAndVotersById($id: Int!) {
+	community(id: $id) {
+    ...CommunityPart
+		auctions {
+      ...AuctionPart
+
+			proposals {
+				address
+				createdDate
+				votes {
+					address
+				}
+			}
+		}
+	}
+}

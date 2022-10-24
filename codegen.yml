@@ -1,0 +1,9 @@
+schema: ./graph/schemas/prop-house.graphql
+generates:
+  ./graph/queries/prop-house-sdk.ts:
+    documents: 
+      - ./graph/queries/prop-house-queries.graphql
+    plugins:
+      - typescript
+      - typescript-graphql-request
+      - typescript-operations
