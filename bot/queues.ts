@@ -1,12 +1,18 @@
 import Bull from "bull";
 import { AuctionStatus } from "../sdk/src/queries/prop-house-sdk";
 import { getPropHouseSDK } from "prop-house-sdk";
-import { makeActions, makeEmbed, makeURLFromAuction, sendMessage } from "./messages";
+import {
+  makeActions,
+  makeEmbed,
+  makeURLFromAuction,
+  sendMessage,
+} from "./messages";
 import { getRedisClient, sendTweet } from "./utils";
 import { setupDMThread } from "./messages";
 
-const updates = new Bull("updates");
-const notifications = new Bull("notifications");
+const redis_url = process.env.REDIS_URL;
+const updates = new Bull("updates", redis_url);
+const notifications = new Bull("notifications", redis_url);
 
 updates.process(async () => {
   console.log("has updates");
@@ -40,12 +46,12 @@ updates.process(async () => {
       await notifications.add({
         id: item.data.id,
         type: item.type,
-        channel: 'twitter',
+        channel: "twitter",
       });
       await notifications.add({
         id: item.data.id,
         status: item.type,
-        channel: 'discord',
+        channel: "discord",
       });
       const users = [...followers, ...subscribers].reduce((last, now) => {
         last[now] = true;
@@ -56,7 +62,7 @@ updates.process(async () => {
           data: {
             id: item.data.id,
             status: item.type,
-            channel: 'discord',
+            channel: "discord",
             user_id: user,
             follower: user in followers,
             subscriber: user in subscribers,
@@ -75,17 +81,26 @@ notifications.process(async (notification) => {
     id: item.id,
   });
 
-  if (item.channel === 'twitter') {
+  if (item.channel === "twitter") {
     let output;
     const uri = makeURLFromAuction(auction);
     if (auction.status === AuctionStatus.Voting) {
-      output = `${auction.community.name}: ${auction.title.substring(0, 10)} up for voting (${uri})`;
+      output = `${auction.community.name}: ${auction.title.substring(
+        0,
+        10
+      )} up for voting (${uri})`;
     }
     if (auction.status === AuctionStatus.Open) {
-      output = `${auction.community.name}: ${auction.title.substring(0, 10)} open for submissions (${uri})`;
+      output = `${auction.community.name}: ${auction.title.substring(
+        0,
+        10
+      )} open for submissions (${uri})`;
     }
     if (auction.status === AuctionStatus.Upcoming) {
-      output = `${auction.community.name}: ${auction.title.substring(0, 10)} coming soon (${uri})`;
+      output = `${auction.community.name}: ${auction.title.substring(
+        0,
+        10
+      )} coming soon (${uri})`;
     }
     if (output) {
       await sendTweet(output);
@@ -146,6 +161,7 @@ async function setupBull() {
     { repeat: { cron: "0 * * * *" } }
   );
   updates.add({ run: "now" });
+  console.log("bull setup");
 }
 
 setupBull();

@@ -1,5 +1,8 @@
 {
   "name": "prop-house-notifier",
+  "scripts": {
+    "start": "yarn workspace prop-house-twitter-bot start"
+  },
   "workspaces": [
     "./bot",
     "./sdk"

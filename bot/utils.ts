@@ -10,12 +10,11 @@ export async function getRedisClient() {
   if (client) {
     return client;
   }
-  const newClient = createClient();
+  const newClient = createClient({ url: process.env.REDIS_URL });
   await newClient.connect();
   client = newClient;
   return newClient;
 }
-
 
 function getTwitterClient() {
   return new TwitterClient({
@@ -26,15 +25,14 @@ function getTwitterClient() {
   });
 }
 
-
 export async function sendTweet(text: string) {
   if (!process.env.TWITTER_API_KEY) {
-    console.log('no twitter api setup');
+    console.log("no twitter api setup");
     return;
   }
 
   try {
-    await getTwitterClient().tweets.statusesUpdate({status: text})
+    await getTwitterClient().tweets.statusesUpdate({ status: text });
   } catch (err: any) {
     console.error(err);
   }
